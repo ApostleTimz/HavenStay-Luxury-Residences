@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function ApartmentCard({ apartment }) {
+export default function ApartmentCard({ apartment, onSelect }) {
   const price = parseFloat(apartment.price_per_night || 0);
 
   return (
@@ -22,9 +22,17 @@ export default function ApartmentCard({ apartment }) {
           <p className="text-xs text-[#8C6D53] mt-1 line-clamp-2 leading-relaxed">{apartment.description}</p>
         </div>
 
-        <div className="mt-5 pt-4 border-t border-[#F0E8DF]">
-          <span className="text-xl font-bold text-[#1E1B18]">₦{price.toLocaleString()}</span>
-          <span className="text-xs text-[#8C6D53]"> / night</span>
+        <div className="mt-5 pt-4 border-t border-[#F0E8DF] flex justify-between items-center">
+          <div>
+            <span className="text-xl font-bold text-[#1E1B18]">₦{price.toLocaleString()}</span>
+            <span className="text-xs text-[#8C6D53]"> / night</span>
+          </div>
+          <button 
+            onClick={() => onSelect(apartment)}
+            className="px-4 py-2 bg-[#F5F0EB] hover:bg-[#5A4535] text-[#5A4535] hover:text-white font-semibold text-xs rounded-xl border border-[#E8DFD5] transition duration-200"
+          >
+            Book Now
+          </button>
         </div>
       </div>
     </div>
