@@ -3,6 +3,7 @@ const https = require('https');
 const axios = require('axios');
 const db = require('../config/db');
 const { protect } = require('../middleware/authMiddleware');
+const { sendBookingReceipt } = require('../services/emailService');
 const router = express.Router();
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
@@ -106,11 +107,47 @@ router.post('/verify', protect, async (req, res) => {
          SET payment_status = EXCLUDED.payment_status, paid_at = NOW()`,
         [booking_id, req.user.id, reference, amountPaid, data.currency, 'success', JSON.stringify(data)]
       );
-      const updatedBooking = await db.query(
-        `UPDATE bookings SET status = 'confirmed' WHERE id = $1 RETURNING *`,
+      await db.query(
+        `UPDATE bookings SET status = 'confirmed' WHERE id = $1`,
         [booking_id]
       );
-      return res.json({ message: 'Payment verified and booking confirmed!', booking: updatedBooking.rows[0] });
+
+      const detailsRes = await db.query(
+        `SELECT b.*, a.title AS apartment_title, a.address, a.city, u.full_name, u.email
+         FROM bookings b
+         JOIN apartments a ON b.apartment_id = a.id
+         JOIN users u ON b.guest_id = u.id
+         WHERE b.id = $1`,
+        [booking_id]
+      );
+      const booking = detailsRes.rows[0];
+
+      const receipt = {
+        reference,
+        guestName: booking.full_name,
+        guestEmail: booking.email,
+        apartmentTitle: booking.apartment_title,
+        address: booking.address,
+        city: booking.city,
+        checkIn: booking.check_in,
+        checkOut: booking.check_out,
+        nights: booking.total_nights,
+        basePrice: parseFloat(booking.base_price || 0),
+        cleaningFee: parseFloat(booking.cleaning_fee || 0),
+        serviceFee: parseFloat(booking.service_fee || 0),
+        totalAmount: parseFloat(booking.total_amount || 0),
+        paidAt: new Date().toISOString(),
+        status: booking.status
+      };
+
+      const emailResult = await sendBookingReceipt(receipt);
+
+      return res.json({
+        message: 'Payment verified and booking confirmed!',
+        booking,
+        receipt,
+        email: emailResult
+      });
     } else {
       return res.status(400).json({ message: 'Payment verification failed', status: data.status });
     }
