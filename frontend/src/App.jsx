@@ -5,7 +5,10 @@ import Footer from './components/layout/Footer';
 import ExplorePage from './pages/ExplorePage';
 import MyBookingsPage from './pages/MyBookingsPage';
 import BookingModal from './features/bookings/components/BookingModal';
+import PaymentModal from './features/bookings/components/PaymentModal';
+import ReceiptModal from './features/bookings/components/ReceiptModal';
 import AuthModal from './features/auth/components/AuthModal';
+import { bookingAPI } from './services/api';
 import useAuth from './hooks/useAuth';
 import useApartments from './hooks/useApartments';
 import useBookings from './hooks/useBookings';
@@ -16,6 +19,9 @@ export default function App() {
   const location = useLocation();
   const [authOpen, setAuthOpen] = useState(false);
   const [selectedApartment, setSelectedApartment] = useState(null);
+  const [payingBooking, setPayingBooking] = useState(null);
+  const [receiptResult, setReceiptResult] = useState(null);
+  const [cancelingId, setCancelingId] = useState(null);
   const [selectedCity, setSelectedCity] = useState('');
   const [searchCity, setSearchCity] = useState('');
 
@@ -34,9 +40,31 @@ export default function App() {
     navigate('/');
   };
 
-  const handleBookingSuccess = async () => {
+  const handleBookingSuccess = async (result) => {
     setSelectedApartment(null);
+    setReceiptResult(result);
     navigate('/bookings');
+    await loadBookings();
+  };
+
+  const handleCancelBooking = async (booking) => {
+    const confirmed = window.confirm(`Cancel your reservation for ${booking.apartment_title}?`);
+    if (!confirmed) return;
+
+    setCancelingId(booking.id);
+    try {
+      await bookingAPI.cancel(booking.id);
+      await loadBookings();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Unable to cancel this booking.');
+    } finally {
+      setCancelingId(null);
+    }
+  };
+
+  const handlePaymentSuccess = async (result) => {
+    setPayingBooking(null);
+    setReceiptResult(result);
     await loadBookings();
   };
 
@@ -67,7 +95,16 @@ export default function App() {
           <Route
             path="/bookings"
             element={user
-              ? <MyBookingsPage bookings={bookings} loading={bookingsLoading} error={bookingsError} />
+              ? (
+                <MyBookingsPage
+                  bookings={bookings}
+                  loading={bookingsLoading}
+                  error={bookingsError}
+                  onProceed={setPayingBooking}
+                  onCancel={handleCancelBooking}
+                  cancelingId={cancelingId}
+                />
+              )
               : <Navigate to="/" replace />}
           />
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -83,6 +120,23 @@ export default function App() {
           onClose={() => setSelectedApartment(null)}
           onSuccess={handleBookingSuccess}
           onRequireAuth={() => setAuthOpen(true)}
+        />
+      )}
+
+      {payingBooking && user && (
+        <PaymentModal
+          booking={payingBooking}
+          user={user}
+          onClose={() => setPayingBooking(null)}
+          onSuccess={handlePaymentSuccess}
+        />
+      )}
+
+      {receiptResult?.receipt && (
+        <ReceiptModal
+          receipt={receiptResult.receipt}
+          emailStatus={receiptResult.email}
+          onClose={() => setReceiptResult(null)}
         />
       )}
 
