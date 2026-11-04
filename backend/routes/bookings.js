@@ -29,6 +29,26 @@ router.post('/', protect, async (req, res) => {
   }
 });
 
+router.patch('/:id/cancel', protect, async (req, res) => {
+  try {
+    const cancelled = await db.query(
+      `UPDATE bookings
+       SET status = 'cancelled'
+       WHERE id = $1 AND guest_id = $2 AND status = 'pending'
+       RETURNING *`,
+      [req.params.id, req.user.id]
+    );
+
+    if (cancelled.rows.length === 0) {
+      return res.status(404).json({ message: 'Pending booking not found or cannot be cancelled' });
+    }
+
+    res.json(cancelled.rows[0]);
+  } catch (error) {
+    res.status(500).json({ message: 'Error cancelling booking', error: error.message });
+  }
+});
+
 router.get('/my-bookings', protect, async (req, res) => {
   try {
     const bookings = await db.query(
