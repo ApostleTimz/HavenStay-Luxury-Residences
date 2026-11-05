@@ -69,6 +69,7 @@ export default function ReceiptModal({ receipt, emailStatus, onClose }) {
           <div>
             <h4 className="text-[10px] font-semibold uppercase tracking-widest text-[#8C6D53] mb-2">Booking details</h4>
             <div className="rounded-2xl border border-[#E8DFD5] divide-y divide-[#F0E8DF]">
+              <DetailRow label="Booking code" value={receipt.bookingReference} />
               <DetailRow label="Apartment" value={receipt.apartmentTitle} />
               <DetailRow label="Address" value={receipt.address} />
               <DetailRow label="City" value={receipt.city} />
