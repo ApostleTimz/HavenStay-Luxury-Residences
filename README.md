@@ -58,22 +58,37 @@ If sign in or sign up shows a network or "authentication failed" message, confir
 
 Paystack transactions are initialized on the backend using `PAYSTACK_SECRET_KEY`, then resumed in the browser with the returned access code via Paystack Inline v2. Never expose the Paystack secret key to the frontend.
 
-## Receipt emails
+## No-account bookings
 
-After a payment is verified, the backend emails a branded receipt to the guest with the apartment, stay dates, price breakdown, and transaction reference.
+Guests can book and pay without creating an account. The booking form requires a full name and email address. The backend stores the guest email on the booking and creates a secure guest access token so the customer can reopen the booking later from an email link (`/guest-booking/<token>`). Account holders continue to see their bookings under **My Bookings**.
 
-Add these to `backend/.env` to enable delivery:
+## Transactional emails (Brevo)
+
+All HavenStay notifications — transaction slips, unpaid-booking reminders, booking codes, and subscription updates — are delivered through the **Brevo transactional email API**. The backend does not use SMTP.
+
+Add these to `backend/.env`:
 
 ```text
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=465
-SMTP_SECURE=true
-SMTP_USER=bulusakwashikitimothy@gmail.com
-SMTP_PASS=your_google_app_password
-EMAIL_FROM=bulusakwashikitimothy@gmail.com
+APP_URL=http://localhost:5173
+BREVO_API_KEY=your_brevo_api_key
+BREVO_SENDER_NAME=HavenStay
+# Must be a verified sender or domain in your Brevo account
+BREVO_SENDER_EMAIL=bulusakwashikitimothy@gmail.com
 ```
 
-For Gmail, enable 2-Step Verification and create an App Password. If `SMTP_PASS` is empty, the receipt is still generated and shown in the app, but no email is sent.
+Your Brevo sender email/domain must be verified in the Brevo dashboard, otherwise the API returns a sender-validation error. If `BREVO_API_KEY` is missing, the receipt is still generated and shown in the app, but no email is sent (the response includes the Brevo/configuration reason).
+
+## Unpaid booking reminders
+
+A background service checks for pending bookings older than `BOOKING_REMINDER_DELAY_MINUTES` (default `60`) and emails the customer a reminder with a link to complete payment. Reminders run every `REMINDER_INTERVAL_MINUTES` (default `15`) and are only sent once per booking. The reminder is skipped for bookings that were already paid or cancelled.
+
+## Subscribe / unsubscribe
+
+Every HavenStay notification email includes **Subscribe** and **Unsubscribe** buttons and a `List-Unsubscribe` header. Subscription preferences are managed on the frontend at `/subscribe?token=...` and `/unsubscribe?token=...`, and the footer also has a newsletter subscribe form.
+
+## Refund policy
+
+A **Read Refund Policies** button is available in the booking and payment modals and links to `/refund-policy`. Reading the policy is optional; customers can proceed with payment without opening it.
 
 ## Security
 
