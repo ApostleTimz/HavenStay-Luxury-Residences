@@ -33,6 +33,9 @@ CREATE TABLE bookings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     apartment_id UUID REFERENCES apartments(id) ON DELETE CASCADE,
     guest_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    guest_name VARCHAR(120),
+    guest_email VARCHAR(255),
+    access_token UUID NOT NULL DEFAULT uuid_generate_v4() UNIQUE,
     check_in DATE NOT NULL,
     check_out DATE NOT NULL,
     total_nights INT NOT NULL,
@@ -41,6 +44,7 @@ CREATE TABLE bookings (
     service_fee DECIMAL(10, 2) NOT NULL,
     total_amount DECIMAL(10, 2) NOT NULL,
     status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'cancelled')),
+    reminder_sent_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
