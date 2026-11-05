@@ -41,12 +41,18 @@ frontend/
 ## Setup
 
 1. Create the PostgreSQL database and run `backend/schema.sql`.
-2. Copy `backend/.env.example` to `backend/.env` and provide your database password, JWT secret, and Paystack test secret.
-3. Copy `frontend/.env.example` to `frontend/.env` and provide your Paystack public test key.
-4. In `backend/`, run `npm install`, then `npm run dev`.
-5. In `frontend/`, run `npm install`, then `npm run dev`.
+2. If you already have a HavenStay database, apply the incremental migrations instead:
+   `psql "$DATABASE_URL" -f backend/migrations/001_guest_bookings_subscriptions.sql`.
+3. Copy `backend/.env.example` to `backend/.env` and provide your database password, JWT secret, Paystack test secret, and `APP_URL`.
+4. Copy `frontend/.env.example` to `frontend/.env` and provide your Paystack public test key.
+5. In `backend/`, run `npm install`, then `npm run dev`.
+6. In `frontend/`, run `npm install`, then `npm run dev`.
 
-The frontend expects the backend at `http://localhost:5000/api` by default.
+The frontend expects the backend at `http://localhost:5000/api` by default. `APP_URL` is used to build links in emails (booking/payment pages, refund policy, subscription preferences) and should point to the running frontend, e.g. `http://localhost:5173`.
+
+### Authentication troubleshooting
+
+If sign in or sign up shows a network or "authentication failed" message, confirm the backend is running on port 5000 and that `frontend/.env` points `VITE_API_BASE_URL` at it. The frontend now distinguishes unreachable-server errors from invalid credentials. Make sure the database schema/migrations have been applied.
 
 ## Payments
 
