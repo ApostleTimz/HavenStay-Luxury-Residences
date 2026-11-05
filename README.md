@@ -22,7 +22,8 @@ backend/
   config/          Database connection
   middleware/      Authentication middleware
   routes/          API route definitions
-  services/        Receipt email service
+  migrations/      Incremental database migrations
+  services/        Receipt, reminder, and subscription services
   schema.sql       PostgreSQL schema
   server.js        API entry point
 frontend/
