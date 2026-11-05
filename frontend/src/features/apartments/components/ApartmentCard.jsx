@@ -3,11 +3,24 @@ import React from 'react';
 export default function ApartmentCard({ apartment, onSelect }) {
   const price = parseFloat(apartment.price_per_night || 0);
 
+  const handleSelect = () => onSelect(apartment);
+
   return (
-    <div className="bg-white border border-[#E8DFD5] rounded-2xl overflow-hidden hover:shadow-md hover:border-[#D4C3B3] transition flex flex-col group">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={handleSelect}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleSelect();
+        }
+      }}
+      className="bg-white border border-[#E8DFD5] rounded-2xl overflow-hidden hover:shadow-md hover:border-[#D4C3B3] transition flex flex-col group cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#5A4535]/30"
+    >
       <div className="relative h-56 overflow-hidden bg-[#F5F0EB]">
-        <img 
-          src={apartment.images?.[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1000&q=80'} 
+        <img
+          src={apartment.images?.[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1000&q=80'}
           alt={apartment.title}
           className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
         />
@@ -27,11 +40,15 @@ export default function ApartmentCard({ apartment, onSelect }) {
             <span className="text-xl font-bold text-[#1E1B18]">₦{price.toLocaleString()}</span>
             <span className="text-xs text-[#8C6D53]"> / night</span>
           </div>
-          <button 
-            onClick={() => onSelect(apartment)}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSelect();
+            }}
             className="px-4 py-2 bg-[#F5F0EB] hover:bg-[#5A4535] text-[#5A4535] hover:text-white font-semibold text-xs rounded-xl border border-[#E8DFD5] transition duration-200"
           >
-            Book Now
+            View Details
           </button>
         </div>
       </div>
