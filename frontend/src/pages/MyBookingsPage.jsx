@@ -6,6 +6,19 @@ const STATUS_STYLES = {
   cancelled: 'bg-rose-50 text-rose-700 border border-rose-200',
 };
 
+const formatDate = (value) => {
+  if (!value) return '—';
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? new Date(`${value}T12:00:00Z`)
+    : new Date(value);
+  return date.toLocaleDateString('en-NG', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC'
+  });
+};
+
 export default function MyBookingsPage({ bookings, loading, error, onProceed, onCancel, cancelingId }) {
   return (
     <div className="max-w-4xl mx-auto px-6 py-10">
@@ -30,7 +43,7 @@ export default function MyBookingsPage({ bookings, loading, error, onProceed, on
                 <div>
                   <h4 className="font-serif font-bold text-xl text-[#1E1B18]">{b.apartment_title}</h4>
                   <p className="text-xs text-[#8C6D53] mt-1">{b.city} • {b.total_nights} Nights</p>
-                  <p className="text-[11px] text-[#A08E7E] mt-1">Check-in: {new Date(b.check_in).toLocaleDateString()} | Check-out: {new Date(b.check_out).toLocaleDateString()}</p>
+                  <p className="text-[11px] text-[#A08E7E] mt-1">Check-in: {formatDate(b.check_in)} | Check-out: {formatDate(b.check_out)}</p>
                 </div>
 
                 <div className="w-full md:w-auto flex flex-col items-start md:items-end gap-3">
