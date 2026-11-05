@@ -10,7 +10,10 @@ HavenStay is a React + Vite frontend with an Express/PostgreSQL backend. The fro
 - Booking creation, payment, cancellation, and reservation history
 - Paystack payments initialized securely on the backend
 - Branded in-app receipt with print / save-to-PDF support
-- Email receipt delivery to the guest after successful payment
+- Email transaction slip delivery after successful payment
+- Automated payment reminders for unpaid bookings
+- Subscribe / unsubscribe links in every notification email
+- Refund policy available before payment (reading is optional)
 
 ## Project structure
 
