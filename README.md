@@ -6,6 +6,7 @@ HavenStay is a React + Vite frontend with an Express/PostgreSQL backend. The fro
 
 - Curated shortlet apartment discovery with city search
 - Guest signup and signin with JWT authentication
+- Book without an account by providing an email address
 - Booking creation, payment, cancellation, and reservation history
 - Paystack payments initialized securely on the backend
 - Branded in-app receipt with print / save-to-PDF support
