@@ -60,3 +60,13 @@ CREATE TABLE payments (
     paid_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE email_subscribers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    full_name VARCHAR(120),
+    is_subscribed BOOLEAN NOT NULL DEFAULT TRUE,
+    token UUID NOT NULL DEFAULT uuid_generate_v4() UNIQUE,
+    subscribed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    unsubscribed_at TIMESTAMP WITH TIME ZONE
+);
