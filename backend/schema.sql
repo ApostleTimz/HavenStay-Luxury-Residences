@@ -51,7 +51,7 @@ CREATE TABLE bookings (
 CREATE TABLE payments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     booking_id UUID REFERENCES bookings(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
     reference VARCHAR(255) UNIQUE NOT NULL,
     amount DECIMAL(10, 2) NOT NULL,
     currency VARCHAR(10) DEFAULT 'NGN',
