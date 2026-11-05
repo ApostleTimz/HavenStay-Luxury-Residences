@@ -7,6 +7,10 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     phone VARCHAR(20),
     role VARCHAR(20) DEFAULT 'guest' CHECK (role IN ('guest', 'host', 'admin')),
+    email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    verification_code_hash VARCHAR(255),
+    verification_code_expires_at TIMESTAMP WITH TIME ZONE,
+    verification_code_sent_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
