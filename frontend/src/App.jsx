@@ -4,9 +4,13 @@ import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import ExplorePage from './pages/ExplorePage';
 import MyBookingsPage from './pages/MyBookingsPage';
+import RefundPolicyPage from './pages/RefundPolicyPage';
+import SubscriptionPage from './pages/SubscriptionPage';
+import GuestBookingPage from './pages/GuestBookingPage';
 import BookingModal from './features/bookings/components/BookingModal';
 import PaymentModal from './features/bookings/components/PaymentModal';
 import ReceiptModal from './features/bookings/components/ReceiptModal';
+import ApartmentDetailsModal from './features/apartments/components/ApartmentDetailsModal';
 import AuthModal from './features/auth/components/AuthModal';
 import { bookingAPI } from './services/api';
 import useAuth from './hooks/useAuth';
@@ -19,6 +23,7 @@ export default function App() {
   const location = useLocation();
   const [authOpen, setAuthOpen] = useState(false);
   const [selectedApartment, setSelectedApartment] = useState(null);
+  const [bookingApartment, setBookingApartment] = useState(null);
   const [payingBooking, setPayingBooking] = useState(null);
   const [receiptResult, setReceiptResult] = useState(null);
   const [cancelingId, setCancelingId] = useState(null);
@@ -41,10 +46,13 @@ export default function App() {
   };
 
   const handleBookingSuccess = async (result) => {
+    setBookingApartment(null);
     setSelectedApartment(null);
     setReceiptResult(result);
-    navigate('/bookings');
-    await loadBookings();
+    if (user) {
+      navigate('/bookings');
+      await loadBookings();
+    }
   };
 
   const handleCancelBooking = async (booking) => {
@@ -107,6 +115,10 @@ export default function App() {
               )
               : <Navigate to="/" replace />}
           />
+          <Route path="/refund-policy" element={<RefundPolicyPage />} />
+          <Route path="/subscribe" element={<SubscriptionPage mode="subscribe" />} />
+          <Route path="/unsubscribe" element={<SubscriptionPage mode="unsubscribe" />} />
+          <Route path="/guest-booking/:token" element={<GuestBookingPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
@@ -114,19 +126,28 @@ export default function App() {
       <Footer />
 
       {selectedApartment && (
-        <BookingModal
+        <ApartmentDetailsModal
           apartment={selectedApartment}
-          user={user}
           onClose={() => setSelectedApartment(null)}
-          onSuccess={handleBookingSuccess}
-          onRequireAuth={() => setAuthOpen(true)}
+          onBook={() => {
+            setBookingApartment(selectedApartment);
+            setSelectedApartment(null);
+          }}
         />
       )}
 
-      {payingBooking && user && (
+      {bookingApartment && (
+        <BookingModal
+          apartment={bookingApartment}
+          user={user}
+          onClose={() => setBookingApartment(null)}
+          onSuccess={handleBookingSuccess}
+        />
+      )}
+
+      {payingBooking && (
         <PaymentModal
           booking={payingBooking}
-          user={user}
           onClose={() => setPayingBooking(null)}
           onSuccess={handlePaymentSuccess}
         />
