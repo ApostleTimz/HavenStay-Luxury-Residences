@@ -9,3 +9,10 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
+
+  - type: web
+    name: havenstay-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
