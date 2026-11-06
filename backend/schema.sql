@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS apartments (
     images TEXT[] NOT NULL DEFAULT '{}',
     amenities TEXT[] DEFAULT '{}',
     is_available BOOLEAN DEFAULT TRUE,
+    seed_key VARCHAR(100),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
