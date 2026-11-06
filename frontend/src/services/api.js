@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+// VITE_API_URL is supported as an alias for existing Vercel configurations.
+// Keep VITE_API_BASE_URL as the canonical name used in local development.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+  || import.meta.env.VITE_API_URL
+  || 'http://localhost:5000/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
