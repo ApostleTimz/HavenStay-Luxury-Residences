@@ -9,7 +9,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [pendingEmail, setPendingEmail] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
-  const [devCode, setDevCode] = useState('');
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,7 +22,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     setForm(EMPTY_FORM);
     setPendingEmail('');
     setVerificationCode('');
-    setDevCode('');
     setNotice('');
     setError('');
   };
@@ -57,7 +55,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         setStep('verify');
         setVerificationCode('');
         setNotice(res.data.message || 'Enter the verification code we sent to your email.');
-        setDevCode(res.data.devCode || '');
         return;
       }
 
@@ -68,7 +65,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         setPendingEmail(data.email || form.email.trim());
         setStep('verify');
         setVerificationCode('');
-        setDevCode('');
         setNotice(data.message || 'Enter the verification code we sent to your email.');
         return;
       }
@@ -98,7 +94,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     try {
       const res = await authAPI.resendVerification({ email: pendingEmail });
       setNotice(res.data.message || 'A new verification code has been sent.');
-      setDevCode(res.data.devCode || '');
       setVerificationCode('');
     } catch (err) {
       setError(getApiErrorMessage(err, 'Unable to resend the verification code. Please try again.'));
@@ -112,7 +107,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     setStep('form');
     setError('');
     setNotice('');
-    setDevCode('');
     setVerificationCode('');
   };
 
@@ -135,11 +129,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         {notice && (
           <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 text-xs rounded-xl">
             {notice}
-            {devCode && (
-              <span className="block mt-1 font-semibold">
-                Development code: <span className="tracking-widest">{devCode}</span>
-              </span>
-            )}
           </div>
         )}
 
@@ -187,7 +176,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                   setStep('form');
                   setError('');
                   setNotice('');
-                  setDevCode('');
                   setVerificationCode('');
                 }}
                 className="text-[#5A4535] font-semibold underline"

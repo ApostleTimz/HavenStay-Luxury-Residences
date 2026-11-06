@@ -38,21 +38,13 @@ const issueVerificationCode = async (userId, email, fullName) => {
   return { code, sendResult };
 };
 
-const buildVerificationPayload = (email, sendResult, code) => {
-  const payload = {
-    verificationRequired: true,
-    email,
-    message: sendResult.sent
-      ? `We sent a ${VERIFICATION_CODE_TTL_MINUTES}-minute verification code to ${email}. Enter it below to activate your account.`
-      : 'Your account was created, but we could not send the verification email. Please request a new code.'
-  };
-
-  if (!sendResult.sent && process.env.NODE_ENV !== 'production') {
-    payload.devCode = code;
-  }
-
-  return payload;
-};
+const buildVerificationPayload = (email, sendResult) => ({
+  verificationRequired: true,
+  email,
+  message: sendResult.sent
+    ? `We sent a ${VERIFICATION_CODE_TTL_MINUTES}-minute verification code to ${email}. Enter it below to activate your account.`
+    : 'Your account was created, but we could not send the verification email. Please request a new code.'
+});
 
 const signToken = (user) => jwt.sign(
   { id: user.id, role: user.role },
@@ -98,8 +90,8 @@ router.post('/signup', async (req, res) => {
         return res.status(400).json({ message: 'An account with this email already exists. Try signing in instead.' });
       }
 
-      const { code, sendResult } = await issueVerificationCode(existingUser.id, email, existingUser.full_name);
-      return res.status(200).json(buildVerificationPayload(email, sendResult, code));
+      const { sendResult } = await issueVerificationCode(existingUser.id, email, existingUser.full_name);
+      return res.status(200).json(buildVerificationPayload(email, sendResult));
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -111,8 +103,8 @@ router.post('/signup', async (req, res) => {
       [full_name, email, password_hash, phone || null, role]
     );
 
-    const { code, sendResult } = await issueVerificationCode(newUser.rows[0].id, email, full_name);
-    res.status(201).json(buildVerificationPayload(email, sendResult, code));
+    const { sendResult } = await issueVerificationCode(newUser.rows[0].id, email, full_name);
+    res.status(201).json(buildVerificationPayload(email, sendResult));
   } catch (error) {
     console.error('[auth] Signup failed:', error.message);
     res.status(500).json({ message: 'Server error during registration. Please try again later.' });
@@ -199,8 +191,8 @@ router.post('/resend-verification', async (req, res) => {
       }
     }
 
-    const { code, sendResult } = await issueVerificationCode(user.id, email, user.full_name);
-    res.json(buildVerificationPayload(email, sendResult, code));
+    const { sendResult } = await issueVerificationCode(user.id, email, user.full_name);
+    res.json(buildVerificationPayload(email, sendResult));
   } catch (error) {
     console.error('[auth] Resend verification failed:', error.message);
     res.status(500).json({ message: 'Server error while resending the code. Please try again later.' });
@@ -229,8 +221,23 @@ router.post('/signin', async (req, res) => {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
     if (!user.email_verified) {
+      const secondsSinceLastCode = user.verification_code_sent_at
+        ? (Date.now() - new Date(user.verification_code_sent_at).getTime()) / 1000
+        : Infinity;
+
+      if (secondsSinceLastCode < VERIFICATION_RESEND_COOLDOWN_SECONDS) {
+        return res.status(403).json({
+          message: `Please check your email. Enter the ${VERIFICATION_CODE_TTL_MINUTES}-minute verification code we already sent, or request a new one.`,
+          requiresVerification: true,
+          email: user.email
+        });
+      }
+
+      const { sendResult } = await issueVerificationCode(user.id, user.email, user.full_name);
       return res.status(403).json({
-        message: 'Please verify your email address before signing in. Enter the code we sent you.',
+        message: sendResult.sent
+          ? `We sent a ${VERIFICATION_CODE_TTL_MINUTES}-minute verification code to ${user.email}. Enter it below to activate your account.`
+          : 'Please verify your email address before signing in, but we could not send the verification email. Please request a new code.',
         requiresVerification: true,
         email: user.email
       });
