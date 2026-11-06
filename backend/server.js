@@ -8,6 +8,7 @@ const bookingRoutes = require('./routes/bookings');
 const paymentRoutes = require('./routes/payments');
 const subscriptionRoutes = require('./routes/subscriptions');
 const { startBookingReminderService } = require('./services/bookingReminderService');
+const { initializeDatabase } = require('./services/databaseInitializer');
 
 const app = express();
 
@@ -34,7 +35,14 @@ app.use((error, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`HavenStay luxury backend running on port ${PORT}`);
-  startBookingReminderService();
-});
+initializeDatabase()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`HavenStay luxury backend running on port ${PORT}`);
+      startBookingReminderService();
+    });
+  })
+  .catch((error) => {
+    console.error('[database] Initialization failed:', error);
+    process.exit(1);
+  });
