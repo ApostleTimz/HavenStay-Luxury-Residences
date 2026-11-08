@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { authAPI, getApiErrorMessage } from '../../../services/api';
 
 const EMPTY_FORM = { full_name: '', email: '', password: '', phone: '' };
+const USERNAME_PATTERN = /^[A-Za-z][A-Za-z0-9]*$/;
+const USERNAME_RULE_MESSAGE = 'Username must start with a letter and contain only letters and numbers, with no spaces or special characters.';
 
 export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
   const [authMode, setAuthMode] = useState('signin');
@@ -45,11 +47,18 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     e.preventDefault();
     setError('');
     setNotice('');
+
+    const fullName = form.full_name.trim();
+    if (authMode === 'signup' && !USERNAME_PATTERN.test(fullName)) {
+      setError(USERNAME_RULE_MESSAGE);
+      return;
+    }
+
     setLoading(true);
     try {
       const email = form.email.trim();
       const res = authMode === 'signup'
-        ? await authAPI.signup({ ...form, email })
+        ? await authAPI.signup({ ...form, full_name: fullName, email })
         : await authAPI.signin({ email, password: form.password });
 
       if (res.data.verificationRequired) {
@@ -196,10 +205,15 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                   <input
                     type="text"
                     required
+                    pattern="[A-Za-z][A-Za-z0-9]*"
+                    title={USERNAME_RULE_MESSAGE}
                     value={form.full_name}
                     onChange={(e) => setForm({ ...form, full_name: e.target.value })}
                     className="w-full mt-1 px-3 py-2 bg-white border border-[#E8DFD5] rounded-xl text-sm text-[#1E1B18]"
                   />
+                  <p className="text-[11px] text-[#A08E7E] mt-1">
+                    Letters and numbers only, starting with a letter. E.g. Timothy, TimothyAkwash, Timothy123.
+                  </p>
                 </div>
               )}
 
