@@ -5,6 +5,7 @@ const { ensureSubscriber, normalizeEmail, isValidEmail } = require('../services/
 const router = express.Router();
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const USERNAME_PATTERN = /^[A-Za-z][A-Za-z0-9]*$/;
 
 const parseDate = (value) => {
   if (!value) return null;
@@ -46,7 +47,12 @@ router.post('/', optionalProtect, async (req, res) => {
       guest_email = guest_email || normalizeEmail(userRes.rows[0].email);
     } else {
       if (!guest_name) {
-        guest_name = 'Guest';
+        return res.status(400).json({ message: 'Please enter your full name so we can personalize your booking.' });
+      }
+      if (!USERNAME_PATTERN.test(guest_name)) {
+        return res.status(400).json({
+          message: 'Name must start with a letter and contain only letters and numbers, with no spaces or special characters.'
+        });
       }
       if (!guest_email || !isValidEmail(guest_email)) {
         return res.status(400).json({ message: 'A valid email address is required so we can send your booking details.' });
