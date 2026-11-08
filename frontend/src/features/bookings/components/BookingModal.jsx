@@ -4,6 +4,8 @@ import RefundPolicyModal from './RefundPolicyModal';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const USERNAME_PATTERN = /^[A-Za-z][A-Za-z0-9]*$/;
+const USERNAME_RULE_MESSAGE = 'Name must start with a letter and contain only letters and numbers, with no spaces or special characters.';
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 const resolveApartmentId = async (apartment) => {
@@ -74,8 +76,13 @@ export default function BookingModal({ apartment, user, onClose, onSuccess }) {
       return;
     }
     if (!user) {
-      if (!guestName.trim()) {
+      const trimmedGuestName = guestName.trim();
+      if (!trimmedGuestName) {
         setError('Please enter your full name so we can personalize your booking.');
+        return;
+      }
+      if (!USERNAME_PATTERN.test(trimmedGuestName)) {
+        setError(USERNAME_RULE_MESSAGE);
         return;
       }
       if (!EMAIL_PATTERN.test(guestEmail.trim())) {
@@ -178,11 +185,16 @@ export default function BookingModal({ apartment, user, onClose, onSuccess }) {
                   <input
                     type="text"
                     required
+                    pattern="[A-Za-z][A-Za-z0-9]*"
+                    title={USERNAME_RULE_MESSAGE}
                     value={guestName}
                     onChange={(e) => { setGuestName(e.target.value); setPendingBooking(null); }}
                     placeholder="Your full name"
                     className="w-full mt-1 px-3 py-2 bg-white border border-[#E8DFD5] rounded-xl text-sm text-[#1E1B18]"
                   />
+                  <p className="mt-1 text-[11px] text-[#A08E7E]">
+                    Letters and numbers only, starting with a letter. E.g. Timothy, TimothyAkwash, Timothy123.
+                  </p>
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-[#5A4535]">Email Address</label>
