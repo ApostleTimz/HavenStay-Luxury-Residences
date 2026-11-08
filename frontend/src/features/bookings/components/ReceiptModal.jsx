@@ -1,8 +1,5 @@
 import React from 'react';
 
-const COMPANY_EMAIL = 'bulusakwashikitimothy@gmail.com';
-const COMPANY_PHONE = '0814 347 7093';
-
 const formatCurrency = (value) => `₦${Number(value || 0).toLocaleString('en-NG', {
   minimumFractionDigits: 0,
   maximumFractionDigits: 2
@@ -51,69 +48,27 @@ export default function ReceiptModal({ receipt, emailStatus, onClose }) {
           </span>
         </div>
 
-        <div className="px-6 py-6 space-y-5">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-[#8C6D53]">Receipt reference</p>
-            <p className="text-sm font-bold text-[#1E1B18] break-all mt-1">{receipt.reference}</p>
+        <div className="px-6 py-6 space-y-4">
+          <div className="rounded-2xl border border-[#E8DFD5] bg-white p-5 text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[#8C6D53]">Total paid</p>
+            <p className="text-3xl font-serif font-bold text-[#1E1B18] mt-1">{formatCurrency(receipt.totalAmount)}</p>
+            <p className="text-[11px] text-[#8C6D53] mt-2 break-all">{receipt.reference}</p>
           </div>
 
-          <div className="rounded-2xl border border-[#E8DFD5] bg-white p-4">
-            <p className="text-sm text-[#1E1B18]">
-              Hi <span className="font-semibold">{receipt.guestName}</span>,
-            </p>
-            <p className="text-xs text-[#8C6D53] mt-2 leading-relaxed">
-              Your payment was successful and your reservation is confirmed. Below are your complete booking details.
-            </p>
-          </div>
-
-          <div>
-            <h4 className="text-[10px] font-semibold uppercase tracking-widest text-[#8C6D53] mb-2">Booking details</h4>
-            <div className="rounded-2xl border border-[#E8DFD5] divide-y divide-[#F0E8DF]">
-              <DetailRow label="Booking code" value={receipt.bookingReference} />
-              <DetailRow label="Apartment" value={receipt.apartmentTitle} />
-              <DetailRow label="Address" value={receipt.address} />
-              <DetailRow label="City" value={receipt.city} />
-              <DetailRow label="Check-in" value={formatDate(receipt.checkIn)} />
-              <DetailRow label="Check-out" value={formatDate(receipt.checkOut)} />
-              <DetailRow label="Nights" value={receipt.nights} />
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-[10px] font-semibold uppercase tracking-widest text-[#8C6D53] mb-2">Price breakdown</h4>
-            <div className="rounded-2xl border border-[#E8DFD5] bg-[#F5F0EB] p-4 space-y-2 text-sm">
-              <PriceRow label="Base price" value={formatCurrency(receipt.basePrice)} />
-              <PriceRow label="Cleaning fee" value={formatCurrency(receipt.cleaningFee)} />
-              <PriceRow label="Service fee" value={formatCurrency(receipt.serviceFee)} />
-              <div className="pt-2 border-t border-[#E8DFD5] flex justify-between text-base font-bold text-[#1E1B18]">
-                <span>Total paid</span>
-                <span className="text-[#5A4535]">{formatCurrency(receipt.totalAmount)}</span>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-[10px] font-semibold uppercase tracking-widest text-[#8C6D53] mb-2">Payment details</h4>
-            <div className="rounded-2xl border border-[#E8DFD5] divide-y divide-[#F0E8DF]">
-              <DetailRow label="Payment method" value="Paystack" />
-              <DetailRow label="Transaction reference" value={receipt.reference} />
-              <DetailRow label="Paid on" value={formatDateTime(receipt.paidAt)} />
-              <DetailRow label="Guest email" value={receipt.guestEmail} />
-            </div>
+          <div className="rounded-2xl border border-[#E8DFD5] divide-y divide-[#F0E8DF]">
+            <DetailRow label="Guest" value={receipt.guestName} />
+            <DetailRow label="Apartment" value={receipt.apartmentTitle} />
+            <DetailRow label="Booking code" value={receipt.bookingReference} />
+            <DetailRow label="Check-in" value={formatDate(receipt.checkIn)} />
+            <DetailRow label="Check-out" value={formatDate(receipt.checkOut)} />
+            <DetailRow label="Paid on" value={formatDateTime(receipt.paidAt)} />
           </div>
 
           <div className={`rounded-xl border p-3 text-xs leading-relaxed ${emailSent ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-amber-200 bg-amber-50 text-amber-800'}`}>
             {emailSent
-              ? `A copy of this receipt has been emailed to ${receipt.guestEmail}.`
-              : `This receipt is confirmed, but the email could not be sent${emailStatus?.reason ? ` (${emailStatus.reason})` : ''}. Keep this copy for your records.`}
+              ? `Receipt emailed to ${receipt.guestEmail}.`
+              : `Receipt confirmed, but the email could not be sent${emailStatus?.reason ? ` (${emailStatus.reason})` : ''}. Keep this copy.`}
           </div>
-
-          <p className="text-xs text-[#8C6D53] leading-relaxed">
-            Need help? Contact HavenStay at{' '}
-            <a href={`mailto:${COMPANY_EMAIL}`} className="font-semibold text-[#5A4535] underline break-all">{COMPANY_EMAIL}</a>
-            {' '}or{' '}
-            <a href="tel:+2348143477093" className="font-semibold text-[#5A4535] underline">{COMPANY_PHONE}</a>.
-          </p>
 
           <div className="receipt-actions flex flex-col-reverse gap-3 sm:flex-row">
             <button
@@ -146,11 +101,3 @@ function DetailRow({ label, value }) {
   );
 }
 
-function PriceRow({ label, value }) {
-  return (
-    <div className="flex justify-between text-[#8C6D53]">
-      <span>{label}</span>
-      <span>{value}</span>
-    </div>
-  );
-}
