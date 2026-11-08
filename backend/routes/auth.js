@@ -7,6 +7,7 @@ const { sendVerificationCode } = require('../services/emailService');
 const router = express.Router();
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const USERNAME_PATTERN = /^[A-Za-z][A-Za-z0-9]*$/;
 const VERIFICATION_CODE_TTL_MINUTES = Number(process.env.EMAIL_VERIFICATION_TTL_MINUTES || 15);
 const VERIFICATION_RESEND_COOLDOWN_SECONDS = Number(process.env.EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS || 60);
 
@@ -69,6 +70,11 @@ router.post('/signup', async (req, res) => {
 
   if (!full_name || !email || !password) {
     return res.status(400).json({ message: 'Please provide full name, email, and password' });
+  }
+  if (!USERNAME_PATTERN.test(full_name)) {
+    return res.status(400).json({
+      message: 'Username must start with a letter and contain only letters and numbers, with no spaces or special characters.'
+    });
   }
   if (!EMAIL_PATTERN.test(email)) {
     return res.status(400).json({ message: 'Please provide a valid email address' });
