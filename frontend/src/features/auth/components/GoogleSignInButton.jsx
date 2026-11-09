@@ -62,6 +62,7 @@ export default function GoogleSignInButton({ onCredential, onError, disabled }) 
 
         window.google.accounts.id.initialize({
           client_id: CLIENT_ID,
+          auto_select: false,
           callback: (response) => {
             if (response?.credential) {
               onCredentialRef.current?.(response.credential);
@@ -74,8 +75,8 @@ export default function GoogleSignInButton({ onCredential, onError, disabled }) 
         window.google.accounts.id.renderButton(containerRef.current, {
           type: 'standard',
           theme: 'outline',
-          size: 'large',
-          text: 'continue_with',
+          size: 'medium',
+          text: 'signin_with',
           shape: 'rectangular',
           logo_alignment: 'left',
           width: 320
