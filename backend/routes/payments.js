@@ -7,6 +7,7 @@ const { sendBookingReceipt } = require('../services/emailService');
 const router = express.Router();
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const paystackHeaders = {
   Authorization: `Bearer ${PAYSTACK_SECRET}`,
@@ -38,6 +39,12 @@ router.post('/initialize', optionalProtect, async (req, res) => {
   const { booking_id, access_token } = req.body;
   if (!booking_id && !access_token) {
     return res.status(400).json({ message: 'booking_id or access_token is required' });
+  }
+  if (access_token && !UUID_PATTERN.test(String(access_token))) {
+    return res.status(404).json({ message: 'Booking not found or this link has expired' });
+  }
+  if (booking_id && !UUID_PATTERN.test(String(booking_id))) {
+    return res.status(404).json({ message: 'Booking not found' });
   }
 
   try {
@@ -113,6 +120,12 @@ router.post('/verify', optionalProtect, async (req, res) => {
   const { reference, booking_id, access_token } = req.body;
   if (!reference || (!booking_id && !access_token)) {
     return res.status(400).json({ message: 'Reference and booking identifier are required' });
+  }
+  if (access_token && !UUID_PATTERN.test(String(access_token))) {
+    return res.status(404).json({ message: 'Booking not found or this link has expired' });
+  }
+  if (booking_id && !UUID_PATTERN.test(String(booking_id))) {
+    return res.status(404).json({ message: 'Booking not found' });
   }
 
   try {
