@@ -43,6 +43,7 @@ export const getApiErrorMessage = (error, fallback = 'Something went wrong. Plea
 export const authAPI = {
   signup: (userData) => api.post('/auth/signup', userData),
   signin: (credentials) => api.post('/auth/signin', credentials),
+  googleLogin: (credential) => api.post('/auth/google', { credential }),
   verifyEmail: (data) => api.post('/auth/verify-email', data),
   resendVerification: (data) => api.post('/auth/resend-verification', data),
 };

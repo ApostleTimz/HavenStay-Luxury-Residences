@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { authAPI, getApiErrorMessage } from '../../../services/api';
+import GoogleSignInButton from './GoogleSignInButton';
 
 const EMPTY_FORM = { full_name: '', email: '', password: '', phone: '' };
 const USERNAME_PATTERN = /^[A-Za-z][A-Za-z0-9]*$/;
@@ -80,6 +81,20 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         return;
       }
       setError(getApiErrorMessage(err, 'Authentication failed. Please try again.'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleCredential = async (credential) => {
+    setError('');
+    setNotice('');
+    setLoading(true);
+    try {
+      const res = await authAPI.googleLogin(credential);
+      completeAuth(res.data);
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Google sign-in failed. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -276,6 +291,20 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                 {loading ? 'Please wait...' : authMode === 'signin' ? 'Sign In' : 'Register Account'}
               </button>
             </form>
+
+            <div className="flex items-center gap-3 mt-5">
+              <span className="h-px flex-1 bg-[#E8DFD5]" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-[#A08E7E]">or</span>
+              <span className="h-px flex-1 bg-[#E8DFD5]" />
+            </div>
+
+            <div className="mt-4">
+              <GoogleSignInButton
+                onCredential={handleGoogleCredential}
+                onError={setError}
+                disabled={loading}
+              />
+            </div>
 
             <p className="text-center text-xs text-[#8C6D53] mt-6">
               {authMode === 'signin' ? "Don't have an account? " : 'Already registered? '}
