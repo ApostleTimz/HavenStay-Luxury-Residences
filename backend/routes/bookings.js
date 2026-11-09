@@ -6,6 +6,7 @@ const router = express.Router();
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const USERNAME_PATTERN = /^[A-Za-z][A-Za-z0-9]*$/;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const parseDate = (value) => {
   if (!value) return null;
@@ -91,6 +92,10 @@ router.post('/', optionalProtect, async (req, res) => {
 });
 
 router.get('/guest/:token', async (req, res) => {
+  if (!UUID_PATTERN.test(req.params.token)) {
+    return res.status(404).json({ message: 'Booking not found or this link has expired' });
+  }
+
   try {
     const result = await db.query(
       `SELECT b.*, a.title AS apartment_title, a.city, a.address, a.images
