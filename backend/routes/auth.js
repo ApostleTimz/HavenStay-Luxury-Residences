@@ -1,4 +1,5 @@
 const express = require('express');
+const axios = require('axios');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
@@ -8,10 +9,48 @@ const router = express.Router();
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_PATTERN = /^[A-Za-z][A-Za-z0-9]*$/;
+const GOOGLE_TOKENINFO_URL = 'https://oauth2.googleapis.com/tokeninfo';
+const GOOGLE_ISSUERS = ['accounts.google.com', 'https://accounts.google.com'];
 const VERIFICATION_CODE_TTL_MINUTES = Number(process.env.EMAIL_VERIFICATION_TTL_MINUTES || 15);
 const VERIFICATION_RESEND_COOLDOWN_SECONDS = Number(process.env.EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS || 60);
 
 const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
+
+const sanitizeUsername = (value) => String(value || '').replace(/[^A-Za-z0-9]/g, '');
+
+const deriveUsername = (displayName, email) => {
+  const fromName = sanitizeUsername(displayName);
+  if (/^[A-Za-z]/.test(fromName)) return fromName.slice(0, 120);
+
+  const fromEmail = sanitizeUsername(String(email).split('@')[0]);
+  if (/^[A-Za-z]/.test(fromEmail)) return fromEmail.slice(0, 120);
+
+  return `Guest${crypto.randomInt(100000, 1000000)}`;
+};
+
+const verifyGoogleCredential = async (credential) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    const notConfigured = new Error('GOOGLE_CLIENT_ID is not configured');
+    notConfigured.code = 'GOOGLE_NOT_CONFIGURED';
+    throw notConfigured;
+  }
+
+  const response = await axios.get(GOOGLE_TOKENINFO_URL, {
+    params: { id_token: credential },
+    timeout: 10000
+  });
+
+  const payload = response.data || {};
+  const emailVerified = payload.email_verified === true || payload.email_verified === 'true';
+
+  if (payload.aud !== clientId) throw new Error('Google token audience mismatch');
+  if (!GOOGLE_ISSUERS.includes(payload.iss)) throw new Error('Google token issuer mismatch');
+  if (!payload.sub || !payload.email || !emailVerified) throw new Error('Google account is not eligible');
+  if (Number(payload.exp) * 1000 <= Date.now()) throw new Error('Google token has expired');
+
+  return payload;
+};
 
 const generateVerificationCode = () => String(crypto.randomInt(100000, 1000000));
 
@@ -253,6 +292,64 @@ router.post('/signin', async (req, res) => {
   } catch (error) {
     console.error('[auth] Signin failed:', error.message);
     res.status(500).json({ message: 'Server error during sign in. Please try again later.' });
+  }
+});
+
+router.post('/google', async (req, res) => {
+  const credential = String(req.body.credential || '');
+
+  if (!credential) {
+    return res.status(400).json({ message: 'Google credential is required' });
+  }
+
+  try {
+    const payload = await verifyGoogleCredential(credential);
+    const email = normalizeEmail(payload.email);
+
+    if (!EMAIL_PATTERN.test(email)) {
+      return res.status(400).json({ message: 'Your Google account does not have a valid email address' });
+    }
+
+    const existing = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+    let user;
+
+    if (existing.rows.length > 0) {
+      user = existing.rows[0];
+
+      if (!user.email_verified) {
+        const updated = await db.query(
+          `UPDATE users
+           SET email_verified = TRUE,
+               verification_code_hash = NULL,
+               verification_code_expires_at = NULL,
+               verification_code_sent_at = NULL
+           WHERE id = $1
+           RETURNING id, full_name, email, role`,
+          [user.id]
+        );
+        user = { ...user, ...updated.rows[0] };
+      }
+    } else {
+      const full_name = deriveUsername(payload.name, email);
+      const password_hash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
+      const inserted = await db.query(
+        `INSERT INTO users (full_name, email, password_hash, phone, role, email_verified)
+         VALUES ($1, $2, $3, NULL, 'guest', TRUE)
+         RETURNING id, full_name, email, role`,
+        [full_name, email, password_hash]
+      );
+      user = inserted.rows[0];
+    }
+
+    const token = signToken(user);
+    res.json({ token, user: publicUser(user) });
+  } catch (error) {
+    if (error.code === 'GOOGLE_NOT_CONFIGURED') {
+      console.error('[auth] Google sign-in failed: GOOGLE_CLIENT_ID is not set');
+      return res.status(500).json({ message: 'Google sign-in is not configured on the server.' });
+    }
+    console.error('[auth] Google sign-in failed:', error.message);
+    res.status(401).json({ message: 'Google sign-in failed. Please try again.' });
   }
 });
 
