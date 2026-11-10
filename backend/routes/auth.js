@@ -295,6 +295,11 @@ router.post('/signin', async (req, res) => {
   }
 });
 
+router.get('/google/config', (req, res) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID || null;
+  res.json({ configured: Boolean(clientId), clientId });
+});
+
 router.post('/google', async (req, res) => {
   const credential = String(req.body.credential || '');
 
