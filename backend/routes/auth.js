@@ -29,7 +29,7 @@ const deriveUsername = (displayName, email) => {
 };
 
 const verifyGoogleCredential = async (credential) => {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientId = String(process.env.GOOGLE_CLIENT_ID || '').trim();
   if (!clientId) {
     const notConfigured = new Error('GOOGLE_CLIENT_ID is not configured');
     notConfigured.code = 'GOOGLE_NOT_CONFIGURED';
@@ -296,7 +296,7 @@ router.post('/signin', async (req, res) => {
 });
 
 router.get('/google/config', (req, res) => {
-  const clientId = process.env.GOOGLE_CLIENT_ID || null;
+  const clientId = String(process.env.GOOGLE_CLIENT_ID || '').trim() || null;
   res.json({ configured: Boolean(clientId), clientId });
 });
 
