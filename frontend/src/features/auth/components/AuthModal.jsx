@@ -226,9 +226,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                     onChange={(e) => setForm({ ...form, full_name: e.target.value })}
                     className="w-full mt-1 px-3 py-2 bg-white border border-[#E8DFD5] rounded-xl text-sm text-[#1E1B18]"
                   />
-                  <p className="text-[11px] text-[#A08E7E] mt-1">
-                    Letters and numbers only, starting with a letter. E.g. Timothy, TimothyAkwash, Timothy123.
-                  </p>
                 </div>
               )}
 
